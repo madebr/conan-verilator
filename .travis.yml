@@ -2,10 +2,11 @@
 env:
    global:
      - CONAN_REFERENCE: "verilator/4.004"
-     - CONAN_USERNAME: "maarten"
-     - CONAN_LOGIN_USERNAME: "maarten"
-     - CONAN_CHANNEL: "stable"
-     
+     - CONAN_USERNAME: "madebr"
+     - CONAN_BUILD_TYPES: "Release"
+     - CONAN_REMOTES: "https://api.bintray.com/conan/bincrafters/public-conan@True@bincrafters"
+     - CONAN_UPLOAD: "https://api.bintray.com/conan/madebr/maarten@True@maarten"
+
 linux: &linux
    os: linux
    sudo: required
@@ -21,6 +22,11 @@ matrix:
 
       - <<: *linux
         env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=lasote/conangcc7
+      - <<: *linux
+        env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=bincrafters/docker-mingw-gcc7 MINGW_CONFIGURATIONS: "4.9@x86@dwarf2@posix,7@x86_64@seh@posix" CONAN_BUILD_POLICY: "missing"
+      - <<: *osx
+        osx_image: xcode9.3
+        env: CONAN_APPLE_CLANG_VERSIONS=9.1
 
 install:
   - chmod +x .travis/install.sh
