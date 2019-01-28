@@ -1,0 +1,13 @@
+build: false
+
+environment:
+  PYTHON: "C:\\Python37-x64"
+  MINGW_CONFIGURATIONS: "7@x86_64@seh@posix"
+
+install:
+  - set PATH=%PYTHON%/Scripts;%PYTHON%;%PATH%
+  - python -m pip install --upgrade conan conan-package-tools
+  - conan user
+
+test_script:
+  - python build.py

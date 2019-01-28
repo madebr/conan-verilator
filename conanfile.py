@@ -1,4 +1,5 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
+from conans.errors import ConanInvalidConfiguration
 import glob
 import os
 import platform
@@ -7,16 +8,20 @@ import shutil
 
 class VerilatorConan(ConanFile):
     name = "verilator"
-    version = "4.006"
+    version = "4.010"
     license = "GPL-3.0"
-    url = "https://github.com/madebr/conan-verilator"
+    url = "https://github.com/bincrafters/conan-verilator"
+    homepage = "https://www.veripool.org/wiki/verilator"
     description = "Verilator compiles synthesizable Verilog and Synthesis assertions into single- or multithreaded C++ or SystemC code"
-    settings = "os", "compiler", "build_type", "arch"
+    topics = ("conan", "verilog", "HDL", "EDA", "simulator", "hardware", "fpga", "asic")
+    author = 'bincrafters <bincrafters@gmail.com>'
+
+    settings = "os_build", "arch_build"
     _source_subfolder = "sources"
 
     def source(self):
         url = "https://www.veripool.org/ftp/verilator-{}.tgz".format(self.version)
-        tools.get(url, sha256="31dc2d2dcdfa09e935e9622169005e34262471740e00c4dde0941267e75dde6e")
+        tools.get(url, sha256="5651748fe28e373ebf7a6364f5e7935ec9b39d29671f683f366e99d5e157d571")
         extracted_dir = "{}-{}".format(self.name, self.version)
         os.rename(extracted_dir, self._source_subfolder)
         lines = (
@@ -33,6 +38,7 @@ class VerilatorConan(ConanFile):
     def build_requirements(self):
         if platform.system() == "Windows":
             self.build_requires("winflexbison/2.5.16@bincrafters/stable")
+            self.build_requires("msys2_installer/20161025@bincrafters/stable")
         else:
             self.build_requires("flex/2.6.4@bincrafters/stable")
             self.build_requires("bison/3.0.4@bincrafters/stable")
@@ -51,17 +57,16 @@ class VerilatorConan(ConanFile):
         return autoTools
 
     def build(self):
-        from conans.client.tools.oss import get_cross_building_settings
-
         with tools.environment_append({"PATH": [os.path.join(self.build_folder, "imports")]}):
             with tools.chdir(self.build_folder):
                 autoTools = self._get_auto_tools()
-                if self.settings.os != "Windows":
-                    _, _, _, host_arch = get_cross_building_settings(self.settings)
-                    if host_arch == "x86":
+                if platform.system() != "Windows":
+                    if self.settings.arch_build == "x86":
                         autoTools.flags.append("-m32")
-                    elif host_arch == "x86_64":
+                    elif self.settings.arch_build == "x86_64":
                         autoTools.flags.append("-m64")
+                    else:
+                        raise ConanInvalidConfiguration("unknown arch_build: {}".format(str(self.settings.arch_build)))
                 autoTools.configure(configure_dir=os.path.join(self.source_folder, self._source_subfolder))
                 autoTools.make()
 
